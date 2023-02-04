@@ -1,4 +1,3 @@
-import { validate } from 'uuid';
 import {
   Controller,
   Get,
@@ -10,6 +9,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 
 import { User, UserList, CreateUserDTO, UpdatePasswordDTO } from './user.types';
@@ -25,14 +25,9 @@ export class UserController {
     return this.service.findAll();
   }
   @Get('/:id')
-  findOne(@Param('id') id: string): User {
+  findOne(@Param('id', ParseUUIDPipe) id: string): User {
     // GET / user /: id - get single user by id
     // Server should answer with status code 400 and corresponding message if userId is invalid(not uuid)
-    console.log(validate(id));
-
-    if (validate(id) == false) {
-      throw new HttpException('Invald uuid', HttpStatus.BAD_REQUEST);
-    }
     const user = this.service.findOne(id);
     // Server should answer with status code 404 and corresponding message if record with id === userId doesn't exist
     if (!user) throw new HttpException('Not found', HttpStatus.NOT_FOUND);
@@ -49,14 +44,11 @@ export class UserController {
   }
   @Put('/:id')
   updatePassword(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() data: UpdatePasswordDTO,
   ): User {
     // PUT / user /: id - update user's password UpdatePasswordDto (with attributes):
     // Server should answer with status code 400 and corresponding message if userId is invalid(not uuid)
-    if (validate(id) == false) {
-      throw new HttpException('Invald uuid', HttpStatus.BAD_REQUEST);
-    }
 
     const { error, user } = this.service.updatePassword(id, data);
     // Server should answer with status code 404 and corresponding message if record with id === userId doesn't exist
@@ -73,12 +65,7 @@ export class UserController {
 
   @Delete('/:id')
   @HttpCode(204) // Server should answer with status code 204 if the record is found and deleted
-  deleteUser(@Param('id') id: string) {
-    // DELETE / user /: id - delete user
-    // Server should answer with status code 400 and corresponding message if userId is invalid(not uuid)
-    if (validate(id) == false) {
-      throw new HttpException('Invald uuid', 400);
-    }
+  deleteUser(@Param('id', ParseUUIDPipe) id: string) {
     const isDeleted = this.service.delete(id);
     // Server should answer with status code 404 and corresponding message if record with id === userId doesn't exist
     if (isDeleted === false)
