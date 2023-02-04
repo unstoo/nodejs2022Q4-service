@@ -1,3 +1,4 @@
+import { IsString } from 'class-validator';
 export interface User {
   id: string; // uuid v4
   login: string;
@@ -9,12 +10,16 @@ export interface User {
 
 export type UserList = Array<User>;
 
-export interface CreateUserDTO {
+export class CreateUserDTO {
+  @IsString()
   login: string;
+  @IsString()
   password: string;
 }
 
-export interface UpdatePasswordDTO {
+export class UpdatePasswordDTO {
+  @IsString()
   oldPassword: string; // previous password
+  @IsString()
   newPassword: string; // new password
 }
