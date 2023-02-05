@@ -1,17 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { getUuid } from 'src/utils/getUuid';
 import { AlbumService } from 'src/album/album.service';
 import { TrackService } from 'src/track/track.service';
+import { FavoritesService } from 'src/favorites/favorites.service';
 
+const artists: Artist[] = [];
 @Injectable()
 export class ArtistService {
-  private readonly artists: Artist[] = [];
   constructor(
+    @Inject(forwardRef(() => AlbumService))
     private readonly albumService: AlbumService,
+    @Inject(forwardRef(() => TrackService))
     private readonly trackService: TrackService,
+    @Inject(forwardRef(() => FavoritesService))
+    private readonly favasService: FavoritesService,
   ) {}
 
   create(createArtistDto: CreateArtistDto): Artist {
@@ -20,16 +25,16 @@ export class ArtistService {
       id: getUuid(),
     };
 
-    this.artists.push(artist);
+    artists.push(artist);
     return artist;
   }
 
   findAll(): Artist[] {
-    return this.artists;
+    return artists;
   }
 
   findOne(id: string): Artist {
-    return this.artists.find((artist) => artist.id === id);
+    return artists.find((artist) => artist.id === id);
   }
 
   update(id: string, updateArtistDto: UpdateArtistDto): Artist | undefined {
@@ -40,11 +45,12 @@ export class ArtistService {
   }
 
   remove(id: string): boolean {
-    const index = this.artists.findIndex((artist) => artist.id === id);
+    const index = artists.findIndex((artist) => artist.id === id);
     if (index < 0) return false;
-    this.artists.splice(index, 1);
+    artists.splice(index, 1);
     this.albumService.removeArtist(id);
     this.trackService.removeArtist(id);
+    this.favasService.removeArtist(id);
     return true;
   }
 }
