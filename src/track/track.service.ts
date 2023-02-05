@@ -4,25 +4,24 @@ import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { Track } from './entities/track.entity';
 
+const tracks: Track[] = [];
 @Injectable()
 export class TrackService {
-  private readonly tracks: Track[] = [];
-
   create(createTrackDto: CreateTrackDto) {
     const track = {
       ...createTrackDto,
       id: getUuid(),
     };
-    this.tracks.push(track);
+    tracks.push(track);
     return track;
   }
 
   findAll() {
-    return this.tracks;
+    return tracks;
   }
 
   findOne(id: string) {
-    return this.tracks.find((track) => track.id === id);
+    return tracks.find((track) => track.id === id);
   }
 
   update(id: string, updateTrackDto: UpdateTrackDto) {
@@ -34,23 +33,24 @@ export class TrackService {
   }
 
   remove(id: string) {
-    const index = this.tracks.findIndex((album) => album.id === id);
+    const index = tracks.findIndex((album) => album.id === id);
     if (index < 0) return false;
-    this.tracks.splice(index, 1);
-    // trackService.removeAlbum
+    tracks.splice(index, 1);
     // favService.removeAlbum
     return true;
   }
 
   removeArtist(artistId: string) {
-    this.tracks.forEach((track) => {
+    console.log(artistId);
+    console.log(tracks);
+    tracks.forEach((track) => {
       if (track.artistId === artistId) {
         track.artistId = null;
       }
     });
   }
   removeAlbum(albumId: string) {
-    this.tracks.forEach((track) => {
+    tracks.forEach((track) => {
       if (track.albumId === albumId) {
         track.albumId = null;
       }

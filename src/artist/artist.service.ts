@@ -4,11 +4,15 @@ import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { getUuid } from 'src/utils/getUuid';
 import { AlbumService } from 'src/album/album.service';
+import { TrackService } from 'src/track/track.service';
 
 @Injectable()
 export class ArtistService {
   private readonly artists: Artist[] = [];
-  constructor(private readonly albumService: AlbumService) {}
+  constructor(
+    private readonly albumService: AlbumService,
+    private readonly trackService: TrackService,
+  ) {}
 
   create(createArtistDto: CreateArtistDto): Artist {
     const artist = {
@@ -40,6 +44,7 @@ export class ArtistService {
     if (index < 0) return false;
     this.artists.splice(index, 1);
     this.albumService.removeArtist(id);
+    this.trackService.removeArtist(id);
     return true;
   }
 }

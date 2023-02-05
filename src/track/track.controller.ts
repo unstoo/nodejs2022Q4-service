@@ -52,6 +52,6 @@ export class TrackController {
   @HttpCode(204)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     if (this.trackService.remove(id) === false)
-      throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Track not found', HttpStatus.NOT_FOUND);
   }
 }
