@@ -52,6 +52,6 @@ export class AlbumController {
   @HttpCode(204)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     if (this.albumService.remove(id) === false)
-      throw new HttpException('Artist not found', HttpStatus.NOT_FOUND); 
+      throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);
   }
 }
