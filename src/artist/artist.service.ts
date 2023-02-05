@@ -3,10 +3,12 @@ import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { Artist } from './entities/artist.entity';
 import { getUuid } from 'src/utils/getUuid';
+import { AlbumService } from 'src/album/album.service';
 
 @Injectable()
 export class ArtistService {
   private readonly artists: Artist[] = [];
+  constructor(private readonly albumService: AlbumService) {}
 
   create(createArtistDto: CreateArtistDto): Artist {
     const artist = {
@@ -27,9 +29,8 @@ export class ArtistService {
   }
 
   update(id: string, updateArtistDto: UpdateArtistDto): Artist | undefined {
-    const artist = this.artists.find((artist) => artist.id === id);
+    const artist = this.findOne(id);
     if (!artist) return artist;
-
     Object.assign(artist, updateArtistDto);
     return artist;
   }
@@ -37,8 +38,8 @@ export class ArtistService {
   remove(id: string): boolean {
     const index = this.artists.findIndex((artist) => artist.id === id);
     if (index < 0) return false;
-
     this.artists.splice(index, 1);
+    this.albumService.removeArtist(id);
     return true;
   }
 }
