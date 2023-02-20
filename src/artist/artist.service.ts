@@ -13,20 +13,13 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  const allArtists = await prisma.artist.findMany();
-  return allArtists;
-}
-
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+const disconnect = async () => {
+  await prisma.$disconnect();
+};
+const handleErr = async (e) => {
+  console.error(e);
+  await prisma.$disconnect();
+};
 
 @Injectable()
 export class ArtistService {
@@ -39,7 +32,19 @@ export class ArtistService {
     private readonly favasService: FavoritesService,
   ) {}
 
-  create(createArtistDto: CreateArtistDto): Artist {
+  async create(createArtistDto: CreateArtistDto): Promise<Artist> {
+    let result;
+    try {
+      result = await prisma.artist.createa({
+        data: createArtistDto,
+      });
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
+
     const artist = {
       ...createArtistDto,
       id: getUuid(),
@@ -50,28 +55,61 @@ export class ArtistService {
   }
 
   async findAll(): Promise<Artist[]> {
-    // return artists;
-    return await main();
+    let result = [];
+    try {
+      result = await prisma.artist.findMany();
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  findOne(id: string): Artist {
-    return artists.find((artist) => artist.id === id);
+  async findOne(id: string): Promise<Artist> {
+    // return artists.find((artist) => artist.id === id);
+    let result;
+    try {
+      result = await prisma.artist.findUnique({
+        where: {
+          id,
+        },
+      });
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  update(id: string, updateArtistDto: UpdateArtistDto): Artist | undefined {
-    const artist = this.findOne(id);
-    if (!artist) return artist;
+  async update(id: string, updateArtistDto: UpdateArtistDto): Promise<Artist> {
+    const artist = await this.findOne(id);
+    if (!artist) return undefined;
     Object.assign(artist, updateArtistDto);
     return artist;
   }
 
-  remove(id: string): boolean {
-    const index = artists.findIndex((artist) => artist.id === id);
-    if (index < 0) return false;
-    artists.splice(index, 1);
-    this.albumService.removeArtist(id);
-    this.trackService.removeArtist(id);
-    this.favasService.removeArtist(id);
-    return true;
+  async remove(id: string): Promise<boolean> {
+    let result = true;
+    try {
+      await prisma.artist.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (e) {
+      result = false;
+    } finally {
+      await disconnect();
+    }
+    return result;
+    // const index = artists.findIndex((artist) => artist.id === id);
+    // if (index < 0) return false;
+    // artists.splice(index, 1);
+    // this.albumService.removeArtist(id);
+    // this.trackService.removeArtist(id);
+    // this.favasService.removeArtist(id);
+    // return true;
   }
 }
