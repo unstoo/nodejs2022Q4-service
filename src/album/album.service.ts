@@ -4,9 +4,7 @@ import { UpdateAlbumDto } from './dto/update-album.dto';
 import { Album } from './entities/album.entity';
 import { TrackService } from '../track/track.service';
 import { FavoritesService } from 'src/favorites/favorites.service';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from 'src/utils/prismaClient';
 
 const disconnect = async () => {
   await prisma.$disconnect();
@@ -67,9 +65,6 @@ export class AlbumService {
 
   async update(id: string, updateAlbumDto: UpdateAlbumDto): Promise<Album> {
     const album = await this.findOne(id);
-    console.log('UPDATE');
-    console.log(album);
-
     if (!album) return undefined;
 
     let result;
@@ -106,12 +101,4 @@ export class AlbumService {
     }
     return result;
   }
-
-  // removeArtist(artistId: string) {
-  //   albums.forEach((album) => {
-  //     if (album.artistId === artistId) {
-  //       album.artistId = null;
-  //     }
-  //   });
-  // }
 }

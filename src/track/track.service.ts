@@ -1,64 +1,118 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { FavoritesService } from 'src/favorites/favorites.service';
-import { getUuid } from 'src/utils/getUuid';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { Track } from './entities/track.entity';
+import { prisma } from 'src/utils/prismaClient';
 
-const tracks: Track[] = [];
+const disconnect = async () => {
+  await prisma.$disconnect();
+};
+const handleErr = async (e) => {
+  console.error(e);
+  await prisma.$disconnect();
+};
 @Injectable()
 export class TrackService {
   constructor(
     @Inject(forwardRef(() => FavoritesService))
     private readonly favasService: FavoritesService,
   ) {}
-  create(createTrackDto: CreateTrackDto) {
-    const track = {
-      ...createTrackDto,
-      id: getUuid(),
-    };
-    tracks.push(track);
-    return track;
+  async create(createTrackDto: CreateTrackDto) {
+    let result;
+    try {
+      result = await prisma.track.create({
+        data: createTrackDto,
+      });
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  findAll() {
-    return tracks;
+  async findAll() {
+    let result = [];
+    try {
+      result = await prisma.track.findMany();
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  findOne(id: string) {
-    return tracks.find((track) => track.id === id);
+  async findOne(id: string) {
+    let result;
+    try {
+      result = await prisma.track.findUnique({
+        where: {
+          id,
+        },
+      });
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  update(id: string, updateTrackDto: UpdateTrackDto) {
-    const track = this.findOne(id);
-    if (!track) return track;
+  async update(id: string, updateTrackDto: UpdateTrackDto) {
+    const track = await this.findOne(id);
+    if (!track) return undefined;
 
-    Object.assign(track, updateTrackDto);
-    return track;
+    let result;
+    try {
+      result = await prisma.track.update({
+        where: {
+          id,
+        },
+        data: {
+          ...track,
+          ...updateTrackDto,
+        },
+      });
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  remove(id: string) {
-    const index = tracks.findIndex((album) => album.id === id);
-    if (index < 0) return false;
-    tracks.splice(index, 1);
-    this.favasService.removeTrack(id);
-    return true;
+  async remove(id: string) {
+    let result = true;
+    try {
+      await prisma.track.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (e) {
+      result = false;
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  removeArtist(artistId: string) {
-    console.log(artistId);
-    console.log(tracks);
-    tracks.forEach((track) => {
-      if (track.artistId === artistId) {
-        track.artistId = null;
-      }
-    });
-  }
-  removeAlbum(albumId: string) {
-    tracks.forEach((track) => {
-      if (track.albumId === albumId) {
-        track.albumId = null;
-      }
-    });
-  }
+  // removeArtist(artistId: string) {
+  //   console.log(artistId);
+  //   console.log(tracks);
+  //   tracks.forEach((track) => {
+  //     if (track.artistId === artistId) {
+  //       track.artistId = null;
+  //     }
+  //   });
+  // }
+  // removeAlbum(albumId: string) {
+  //   tracks.forEach((track) => {
+  //     if (track.albumId === albumId) {
+  //       track.albumId = null;
+  //     }
+  //   });
+  // }
 }

@@ -2,11 +2,20 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { AlbumService } from 'src/album/album.service';
 import { ArtistService } from 'src/artist/artist.service';
 import { TrackService } from 'src/track/track.service';
+import { prisma } from 'src/utils/prismaClient';
 
 const favs = {
   artists: [],
   albums: [],
   tracks: [],
+};
+
+const disconnect = async () => {
+  await prisma.$disconnect();
+};
+const handleErr = async (e) => {
+  console.error(e);
+  await prisma.$disconnect();
 };
 
 @Injectable()
@@ -20,43 +29,54 @@ export class FavoritesService {
     private readonly artistService: ArtistService,
   ) {}
 
-  findAll() {
-    return favs;
+  async findAll() {
+    let result = [];
+    try {
+      result = await prisma.favorite.findMany();
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
-  addArtist(id: string) {
-    const artist = this.artistService.findOne(id);
+  async addArtist(id: string) {
+    const artist = await this.artistService.findOne(id);
     if (!artist) return false;
-    favs.artists.push(artist);
+
+    const exists = await prisma.favorite.create({ data: {} });
+    if (!exists) return false;
+
     return true;
   }
-  removeArtist(id: string) {
+  async removeArtist(id: string) {
     const index = favs.artists.findIndex((entity) => entity.id === id);
     if (index < 0) return false;
     favs.artists.splice(index, 1);
     return true;
   }
 
-  addAlbum(id: string) {
-    const entity = this.albumService.findOne(id);
+  async addAlbum(id: string) {
+    const entity = await this.albumService.findOne(id);
     if (!entity) return false;
     favs.albums.push(entity);
     return true;
   }
-  removeAlbum(id: string) {
+  async removeAlbum(id: string) {
     const index = favs.albums.findIndex((entity) => entity.id === id);
     if (index < 0) return false;
     favs.albums.splice(index, 1);
     return true;
   }
 
-  addTrack(id: string) {
-    const entity = this.trackService.findOne(id);
+  async addTrack(id: string) {
+    const entity = await this.trackService.findOne(id);
     if (!entity) return false;
     favs.tracks.push(entity);
     return true;
   }
-  removeTrack(id: string) {
+  async removeTrack(id: string) {
     const index = favs.tracks.findIndex((entity) => entity.id === id);
     if (index < 0) return false;
     favs.tracks.splice(index, 1);

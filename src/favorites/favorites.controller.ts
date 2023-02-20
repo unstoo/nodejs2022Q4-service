@@ -16,14 +16,14 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get()
-  findAll() {
-    return this.favoritesService.findAll();
+  async findAll() {
+    return await this.favoritesService.findAll();
   }
 
   @Post('track/:id')
   @HttpCode(201)
-  addTrack(@Param('id', ParseUUIDPipe) id: string) {
-    const isAdded = this.favoritesService.addTrack(id);
+  async ddTrack(@Param('id', ParseUUIDPipe) id: string) {
+    const isAdded = await this.favoritesService.addTrack(id);
     if (!isAdded)
       throw new HttpException('Not added', HttpStatus.UNPROCESSABLE_ENTITY);
   }
@@ -36,8 +36,8 @@ export class FavoritesController {
   }
 
   @Post('/album/:id')
-  addAlbum(@Param('id', ParseUUIDPipe) id: string) {
-    const isAdded = this.favoritesService.addAlbum(id);
+  async addAlbum(@Param('id', ParseUUIDPipe) id: string) {
+    const isAdded = await this.favoritesService.addAlbum(id);
     if (!isAdded)
       throw new HttpException('Not added', HttpStatus.UNPROCESSABLE_ENTITY);
   }
@@ -50,8 +50,8 @@ export class FavoritesController {
   }
 
   @Post('/artist/:id')
-  addArtist(@Param('id', ParseUUIDPipe) id: string) {
-    const isAdded = this.favoritesService.addArtist(id);
+  async addArtist(@Param('id', ParseUUIDPipe) id: string) {
+    const isAdded = await this.favoritesService.addArtist(id);
     if (!isAdded)
       throw new HttpException('Not added', HttpStatus.UNPROCESSABLE_ENTITY);
   }
