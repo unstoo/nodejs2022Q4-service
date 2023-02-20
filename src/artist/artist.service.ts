@@ -7,8 +7,6 @@ import { AlbumService } from 'src/album/album.service';
 import { TrackService } from 'src/track/track.service';
 import { FavoritesService } from 'src/favorites/favorites.service';
 
-const artists: Artist[] = [];
-
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -35,7 +33,7 @@ export class ArtistService {
   async create(createArtistDto: CreateArtistDto): Promise<Artist> {
     let result;
     try {
-      result = await prisma.artist.createa({
+      result = await prisma.artist.create({
         data: createArtistDto,
       });
     } catch (e) {
@@ -44,14 +42,6 @@ export class ArtistService {
       await disconnect();
     }
     return result;
-
-    const artist = {
-      ...createArtistDto,
-      id: getUuid(),
-    };
-
-    artists.push(artist);
-    return artist;
   }
 
   async findAll(): Promise<Artist[]> {
@@ -67,7 +57,6 @@ export class ArtistService {
   }
 
   async findOne(id: string): Promise<Artist> {
-    // return artists.find((artist) => artist.id === id);
     let result;
     try {
       result = await prisma.artist.findUnique({
@@ -86,8 +75,24 @@ export class ArtistService {
   async update(id: string, updateArtistDto: UpdateArtistDto): Promise<Artist> {
     const artist = await this.findOne(id);
     if (!artist) return undefined;
-    Object.assign(artist, updateArtistDto);
-    return artist;
+
+    let result;
+    try {
+      result = await prisma.artist.update({
+        where: {
+          id,
+        },
+        data: {
+          ...artist,
+          ...updateArtistDto,
+        },
+      });
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
   }
 
   async remove(id: string): Promise<boolean> {
