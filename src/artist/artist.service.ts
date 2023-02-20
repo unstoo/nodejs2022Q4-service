@@ -8,6 +8,26 @@ import { TrackService } from 'src/track/track.service';
 import { FavoritesService } from 'src/favorites/favorites.service';
 
 const artists: Artist[] = [];
+
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  const allArtists = await prisma.artist.findMany();
+  return allArtists;
+}
+
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
+
 @Injectable()
 export class ArtistService {
   constructor(
@@ -29,8 +49,9 @@ export class ArtistService {
     return artist;
   }
 
-  findAll(): Artist[] {
-    return artists;
+  async findAll(): Promise<Artist[]> {
+    // return artists;
+    return await main();
   }
 
   findOne(id: string): Artist {
