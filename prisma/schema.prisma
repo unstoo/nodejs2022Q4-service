@@ -56,14 +56,9 @@ model Track {
 }
 
 model Favorite {
-  id String @id @default(uuid())
+  userId Int @id @unique
 
-  artist   Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
-  artistId String?
-
-  album    Album?     @relation(fields: [albumId], references: [id], onDelete: SetNull)
-  albumId  String?
-
-  track  Track?     @relation(fields: [trackId], references: [id], onDelete: SetNull)
-  trackId  String?
+  artists   Artist[]
+  albums    Album[]
+  tracks    Track[]
 }

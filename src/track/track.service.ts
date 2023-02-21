@@ -2,7 +2,6 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { FavoritesService } from 'src/favorites/favorites.service';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { Track } from './entities/track.entity';
 import { prisma } from 'src/utils/prismaClient';
 
 const disconnect = async () => {
@@ -98,21 +97,4 @@ export class TrackService {
     }
     return result;
   }
-
-  // removeArtist(artistId: string) {
-  //   console.log(artistId);
-  //   console.log(tracks);
-  //   tracks.forEach((track) => {
-  //     if (track.artistId === artistId) {
-  //       track.artistId = null;
-  //     }
-  //   });
-  // }
-  // removeAlbum(albumId: string) {
-  //   tracks.forEach((track) => {
-  //     if (track.albumId === albumId) {
-  //       track.albumId = null;
-  //     }
-  //   });
-  // }
 }

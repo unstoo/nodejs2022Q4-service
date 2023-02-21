@@ -29,8 +29,8 @@ export class FavoritesController {
   }
   @Delete('/track/:id')
   @HttpCode(204)
-  removeTrack(@Param('id', ParseUUIDPipe) id: string) {
-    const isDeleted = this.favoritesService.removeTrack(id);
+  async removeTrack(@Param('id', ParseUUIDPipe) id: string) {
+    const isDeleted = await this.favoritesService.removeTrack(id);
     if (!isDeleted)
       throw new HttpException('Not deleted', HttpStatus.NOT_FOUND);
   }
@@ -43,8 +43,8 @@ export class FavoritesController {
   }
   @Delete('/album/:id')
   @HttpCode(204)
-  removeAlbum(@Param('id', ParseUUIDPipe) id: string) {
-    const isDeleted = this.favoritesService.removeAlbum(id);
+  async removeAlbum(@Param('id', ParseUUIDPipe) id: string) {
+    const isDeleted = await this.favoritesService.removeAlbum(id);
     if (!isDeleted)
       throw new HttpException('Not deleted', HttpStatus.NOT_FOUND);
   }
@@ -57,8 +57,8 @@ export class FavoritesController {
   }
   @Delete('/artist/:id')
   @HttpCode(204)
-  removeArtist(@Param('id', ParseUUIDPipe) id: string) {
-    const isDeleted = this.favoritesService.removeArtist(id);
+  async removeArtist(@Param('id', ParseUUIDPipe) id: string) {
+    const isDeleted = await this.favoritesService.removeArtist(id);
     if (!isDeleted)
       throw new HttpException('Not deleted', HttpStatus.NOT_FOUND);
   }

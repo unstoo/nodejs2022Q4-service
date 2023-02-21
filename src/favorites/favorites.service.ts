@@ -17,6 +17,11 @@ const handleErr = async (e) => {
   console.error(e);
   await prisma.$disconnect();
 };
+const empty = {
+  albums: [],
+  tracks: [],
+  artists: [],
+};
 
 @Injectable()
 export class FavoritesService {
@@ -30,9 +35,18 @@ export class FavoritesService {
   ) {}
 
   async findAll() {
-    let result = [];
+    let result = empty;
     try {
-      result = await prisma.favorite.findMany();
+      result = await prisma.favorite.findUnique({
+        where: {
+          userId: 1,
+        },
+        include: {
+          artists: true,
+          albums: true,
+          tracks: true,
+        },
+      });
     } catch (e) {
       await handleErr(e);
     } finally {
@@ -45,41 +59,124 @@ export class FavoritesService {
     const artist = await this.artistService.findOne(id);
     if (!artist) return false;
 
-    const exists = await prisma.favorite.create({ data: {} });
-    if (!exists) return false;
-
+    await prisma.favorite.update({
+      where: {
+        userId: 1,
+      },
+      data: {
+        artists: {
+          connect: [{ id: artist.id }],
+        },
+      },
+    });
     return true;
   }
-  async removeArtist(id: string) {
-    const index = favs.artists.findIndex((entity) => entity.id === id);
-    if (index < 0) return false;
-    favs.artists.splice(index, 1);
+  async removeArtist(artistId: string) {
+    const res = await prisma.favorite.findUnique({
+      where: {
+        userId: 1,
+      },
+      include: {
+        artists: true,
+      },
+    });
+
+    const artist = res.artists.find((artist) => artist.id === artistId);
+    if (!artist) return false;
+
+    await prisma.favorite.update({
+      where: {
+        userId: 1,
+      },
+      data: {
+        artists: {
+          disconnect: [{ id: artistId }],
+        },
+      },
+    });
     return true;
   }
 
   async addAlbum(id: string) {
     const entity = await this.albumService.findOne(id);
     if (!entity) return false;
-    favs.albums.push(entity);
+
+    await prisma.favorite.update({
+      where: {
+        userId: 1,
+      },
+      data: {
+        albums: {
+          connect: [{ id: entity.id }],
+        },
+      },
+    });
     return true;
   }
-  async removeAlbum(id: string) {
-    const index = favs.albums.findIndex((entity) => entity.id === id);
-    if (index < 0) return false;
-    favs.albums.splice(index, 1);
+  async removeAlbum(albumId: string) {
+    const res = await prisma.favorite.findUnique({
+      where: {
+        userId: 1,
+      },
+      include: {
+        albums: true,
+      },
+    });
+    const album = res.albums.find((album) => album.id === albumId);
+    if (!album) return false;
+
+    await prisma.favorite.update({
+      where: {
+        userId: 1,
+      },
+      data: {
+        albums: {
+          disconnect: [{ id: albumId }],
+        },
+      },
+    });
     return true;
   }
 
   async addTrack(id: string) {
     const entity = await this.trackService.findOne(id);
+
     if (!entity) return false;
-    favs.tracks.push(entity);
+
+    await prisma.favorite.update({
+      where: {
+        userId: 1,
+      },
+      data: {
+        tracks: {
+          connect: [{ id: entity.id }],
+        },
+      },
+    });
     return true;
   }
-  async removeTrack(id: string) {
-    const index = favs.tracks.findIndex((entity) => entity.id === id);
-    if (index < 0) return false;
-    favs.tracks.splice(index, 1);
+  async removeTrack(trackId: string) {
+    const res = await prisma.favorite.findUnique({
+      where: {
+        userId: 1,
+      },
+      include: {
+        tracks: true,
+      },
+    });
+    const track = res.tracks.find((track) => track.id === trackId);
+    if (!track) return false;
+
+    await prisma.favorite.update({
+      where: {
+        userId: 1,
+      },
+      data: {
+        tracks: {
+          disconnect: [{ id: trackId }],
+        },
+      },
+    });
     return true;
   }
 }
