@@ -1,10 +1,8 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { Auth } from './entities/auth.entity';
-import bcrypt from 'bcrypt';
-import { AlbumService } from 'src/album/album.service';
-import { TrackService } from 'src/track/track.service';
-import { FavoritesService } from 'src/favorites/favorites.service';
+import { compare } from 'bcrypt';
+import { sign } from 'jsonwebtoken';
 import { prisma } from 'src/utils/prismaClient';
 import { UserService } from 'src/user/user.service';
 import { UpdateAuthDto } from './dto/update-auth.dto';
@@ -30,7 +28,7 @@ export class AuthService {
   }
   async login(createAuthDto: CreateAuthDto): Promise<{
     error: 403 | null;
-    result: null | string;
+    result: null | { accessToken: string };
   }> {
     const result = await this.userService.findByLoginName(createAuthDto.login);
     if (!result)
@@ -39,18 +37,24 @@ export class AuthService {
         result: null,
       };
 
-    const isMatch = bcrypt.compare(createAuthDto.password, result.password);
+    const isMatch = compare(createAuthDto.password, result.password);
     if (!isMatch)
       return {
         error: 403,
         result: null,
       };
 
-    const JWT_TOKEN = 'im_token';
+    const accessToken = sign(
+      { id: result.id, login: result.login },
+      'MY_JWT_SECRET',
+      {
+        expiresIn: '24h',
+      },
+    );
 
     return {
       error: null,
-      result: JWT_TOKEN,
+      result: { accessToken },
     };
   }
 }

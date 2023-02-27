@@ -1,11 +1,7 @@
 import {
   Controller,
-  Get,
   Post,
-  Param,
-  Delete,
   HttpCode,
-  ParseUUIDPipe,
   HttpException,
   HttpStatus,
   Body,

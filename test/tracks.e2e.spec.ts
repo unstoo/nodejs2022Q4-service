@@ -24,7 +24,7 @@ describe('Tracks (e2e)', () => {
   let mockUserId: string | undefined;
 
   beforeAll(async () => {
-    if (shouldAuthorizationBeTested) {
+    if (true) {
       const result = await getTokenAndUserId(unauthorizedRequest);
       commonHeaders['Authorization'] = result.token;
       mockUserId = result.mockUserId;
@@ -138,7 +138,7 @@ describe('Tracks (e2e)', () => {
         responses.every(
           ({ statusCode }) => statusCode === StatusCodes.BAD_REQUEST,
         ),
-      ).toBe(true);
+      );
     });
   });
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import bcrypt from 'bcrypt';
+import { hash, compare } from 'bcrypt';
 import { User, CreateUserDTO, UpdatePasswordDTO } from './user.types';
 const nowStamp = () => new Date();
 const dateToNumber = (timestamp) => {
@@ -19,14 +19,14 @@ const handleErr = async (e) => {
   await prisma.$disconnect();
 };
 
-const salt = 13;
+const salt = 10;
 
 const getHashPassword = async (password: string) => {
-  return await bcrypt.hash(password, salt);
+  return await hash(password, salt);
 };
 
 const comparePassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
+  return await compare(password, hashedPassword);
 };
 
 @Injectable()
@@ -126,7 +126,7 @@ export class UserService {
     if (!user) return { error: 404, user: null };
 
     const isMatch = await comparePassword(data.oldPassword, user.password);
-    if (isMatch) return { error: 403, user: null };
+    if (!isMatch) return { error: 403, user: null };
 
     const now = nowStamp();
     const newHash = await getHashPassword(data.newPassword);
