@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import bcrypt from 'bcrypt';
 import { User, CreateUserDTO, UpdatePasswordDTO } from './user.types';
 const nowStamp = () => new Date();
 const dateToNumber = (timestamp) => {
@@ -16,6 +17,16 @@ const disconnect = async () => {
 const handleErr = async (e) => {
   console.error(e);
   await prisma.$disconnect();
+};
+
+const salt = 13;
+
+const getHashPassword = async (password: string) => {
+  return await bcrypt.hash(password, salt);
+};
+
+const comparePassword = async (password, hashedPassword) => {
+  return await bcrypt.compare(password, hashedPassword);
 };
 
 @Injectable()
@@ -58,9 +69,30 @@ export class UserService {
     return result;
   }
 
+  async findByLoginName(login: string): Promise<User> {
+    let result;
+    try {
+      result = await prisma.user.findFirst({
+        where: {
+          login,
+        },
+      });
+      if (result) {
+        result.updatedAt = dateToNumber(result.updatedAt);
+        result.createdAt = dateToNumber(result.createdAt);
+      }
+    } catch (e) {
+      await handleErr(e);
+    } finally {
+      await disconnect();
+    }
+    return result;
+  }
+
   async create(userData: CreateUserDTO): Promise<User> {
     const user = {
-      ...userData,
+      login: userData.login,
+      password: await getHashPassword(userData.password),
       version: 1,
       createdAt: nowStamp(),
       updatedAt: nowStamp(),
@@ -92,21 +124,24 @@ export class UserService {
   }> {
     const user = await this.findOne(id);
     if (!user) return { error: 404, user: null };
-    if (data.oldPassword !== user.password) return { error: 403, user: null };
+
+    const isMatch = await comparePassword(data.oldPassword, user.password);
+    if (isMatch) return { error: 403, user: null };
 
     const now = nowStamp();
+    const newHash = await getHashPassword(data.newPassword);
     await prisma.user.update({
       where: {
         id,
       },
       data: {
-        password: data.newPassword,
+        password: newHash,
         version: user.version + 1,
         updatedAt: now,
       },
     });
 
-    user.password = data.newPassword;
+    user.password = newHash;
     user.version += 1;
     user.updatedAt = dateToNumber(now);
     user.createdAt = dateToNumber(user.createdAt);
