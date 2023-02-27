@@ -10,12 +10,15 @@ import {
   HttpException,
   HttpStatus,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 
 import { User, UserList, CreateUserDTO, UpdatePasswordDTO } from './user.types';
 import { UserService } from './user.service';
+import { AuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Controller('user')
+@UseGuards(AuthGuard)
 export class UserController {
   constructor(private service: UserService) {}
   @Get()

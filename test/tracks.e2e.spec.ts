@@ -24,7 +24,7 @@ describe('Tracks (e2e)', () => {
   let mockUserId: string | undefined;
 
   beforeAll(async () => {
-    if (true) {
+    if (shouldAuthorizationBeTested) {
       const result = await getTokenAndUserId(unauthorizedRequest);
       commonHeaders['Authorization'] = result.token;
       mockUserId = result.mockUserId;

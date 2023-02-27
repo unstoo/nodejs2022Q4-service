@@ -19,7 +19,7 @@ const handleErr = async (e) => {
   await prisma.$disconnect();
 };
 
-const salt = 10;
+const salt = +process.env.CRYPT_SALT;
 
 const getHashPassword = async (password: string) => {
   return await hash(password, salt);

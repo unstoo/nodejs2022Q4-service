@@ -46,7 +46,7 @@ export class AuthService {
 
     const accessToken = sign(
       { id: result.id, login: result.login },
-      'MY_JWT_SECRET',
+      process.env.MY_JWT_SECRET,
       {
         expiresIn: '24h',
       },
