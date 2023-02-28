@@ -16,12 +16,12 @@ const validateRequest = (req) => {
   let verified;
   try {
     const [label, maybeToken] = req.headers.authorization.split(' ');
-    if (label !== 'Bearer') throw new Error('Incorrect scheme');
+    if (label !== 'Bearer') throw new Error();
     verified = verify(maybeToken, process.env.MY_JWT_SECRET);
     console.log(verified);
-    if (hasExpired(verified.exp)) throw new Error('Expired');
+    if (hasExpired(verified.exp)) throw new Error();
   } catch (e) {
-    throw new UnauthorizedException();
+    throw new UnauthorizedException('Wrong access token');
   }
   return true;
 };

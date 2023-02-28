@@ -2,17 +2,21 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { Auth } from './entities/auth.entity';
 import { compare } from 'bcrypt';
-import { sign } from 'jsonwebtoken';
-import { prisma } from 'src/utils/prismaClient';
+import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { UserService } from 'src/user/user.service';
-import { UpdateAuthDto } from './dto/update-auth.dto';
 
-const disconnect = async () => {
-  await prisma.$disconnect();
-};
-const handleErr = async (e) => {
-  console.error(e);
-  await prisma.$disconnect();
+const makeTokens = (id, login) => {
+  const accessToken = sign({ id, login }, process.env.MY_JWT_SECRET, {
+    expiresIn: '24h',
+  });
+  const refreshToken = sign({ id, login }, process.env.MY_JWT_SECRET, {
+    expiresIn: '14d',
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+  };
 };
 
 @Injectable()
@@ -27,8 +31,8 @@ export class AuthService {
     return result;
   }
   async login(createAuthDto: CreateAuthDto): Promise<{
-    error: 403 | null;
-    result: null | { accessToken: string };
+    error: 403 | 500 | null;
+    result: null | { accessToken: string; refreshToken: string };
   }> {
     const result = await this.userService.findByLoginName(createAuthDto.login);
     if (!result)
@@ -44,17 +48,46 @@ export class AuthService {
         result: null,
       };
 
-    const accessToken = sign(
-      { id: result.id, login: result.login },
-      process.env.MY_JWT_SECRET,
-      {
-        expiresIn: '24h',
-      },
-    );
+    let tokens;
+
+    try {
+      tokens = makeTokens(result.id, result.login);
+    } catch (e) {
+      return {
+        error: 500,
+        result: null,
+      };
+    }
 
     return {
       error: null,
-      result: { accessToken },
+      result: tokens,
     };
+  }
+  async refresh(refreshToken: string): Promise<{
+    error: 403 | 500 | null;
+    result: null | { accessToken: string; refreshToken: string };
+  }> {
+    let verified;
+    try {
+      verified = verify(refreshToken, process.env.MY_JWT_SECRET);
+      const now = Date.now();
+      const expire = Number(verified.exp) * 1000;
+      if (now > expire)
+        return {
+          error: 403,
+          result: null,
+        };
+
+      return {
+        error: null,
+        result: makeTokens(verified.id, verified.login),
+      };
+    } catch (e) {
+      return {
+        error: 403,
+        result: null,
+      };
+    }
   }
 }
